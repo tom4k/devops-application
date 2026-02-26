@@ -43,26 +43,13 @@ pipeline {
                     // Start the container, wait a moment, and ensure it is up
                     sh """
                         docker run -d --name temp-test-${TAG} -p 8085:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}
-                        sleep 5
-                        docker ps | grep temp-test-${TAG}
-                        docker rm -f temp-test-${TAG}
+                       
                     """
                 }
             }
         }
         
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    echo "Pushing Docker Image..."
-                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDS_ID, passwordVariable: 'DOCKERHUB_PASS', usernameVariable: 'DOCKERHUB_USER')]) {
-                        sh "echo \$DOCKERHUB_PASS | docker login -u \$DOCKERHUB_USER --password-stdin"
-                        sh "docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}"
-                        sh "docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest"
-                    }
-                }
-            }
-        }
+        
     }
 
     post {
