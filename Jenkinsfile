@@ -42,7 +42,7 @@ pipeline {
                     echo "Testing if the container runs..."
                     // Start the container, wait a moment, and ensure it is up
                     sh """
-                        docker run -d --name temp-test-${TAG} -p 8081:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}
+                        docker run -d --name temp-test-${TAG} -p 8085:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}
                         sleep 5
                         docker ps | grep temp-test-${TAG}
                         docker rm -f temp-test-${TAG}
