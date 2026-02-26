@@ -18,14 +18,7 @@ pipeline {
             }
         }
         
-        stage('Lint & Build Check') {
-            steps {
-                script {
-                    echo "Skipping local npm build check as Jenkins runs in a container without npm..."
-                    echo "The build check will naturally happen inside the multi-stage Dockerfile during the Docker Build stage."
-                }
-            }
-        }
+       
 
         stage('Build Docker Image') {
             steps {
