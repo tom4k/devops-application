@@ -46,8 +46,8 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker Image..."
-                    withCredentials([string(credentialsId: env.DOCKER_CREDS_ID, variable: 'DOCKERHUB_PASS')]) {
-                        sh "docker login -u ${DOCKER_HUB_USER} -p ${DOCKERHUB_PASS}"
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDS_ID, usernameVariable: 'DOCKERHUB_USER_CREDS', passwordVariable: 'DOCKERHUB_PASS')]) {
+                        sh "docker login -u ${DOCKERHUB_USER_CREDS} -p ${DOCKERHUB_PASS}"
                         sh "docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}"
                         sh "docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest"
                     }
