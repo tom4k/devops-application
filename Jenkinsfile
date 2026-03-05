@@ -5,7 +5,7 @@ pipeline {
     environment {
         // Change these to match your Docker Hub repository details
         DOCKER_IMAGE = 'devops-frontend'
-        DOCKER_CREDS_ID = 'dockerhub-credentials' // ID of credentials in Jenkins
+        DOCKER_CREDS_ID = 'dockerhub-creds' // ID of credentials in Jenkins
         DOCKER_HUB_USER = 'tomkurian' // Replace with your Docker Hub username
         TAG = "${env.BUILD_NUMBER}"
     }
@@ -38,6 +38,19 @@ pipeline {
                         docker run -d --name temp-test-${TAG} -p 8085:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}
                        
                     """
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    echo "Pushing Docker Image..."
+                    withCredentials([string(credentialsId: env.DOCKER_CREDS_ID, variable: 'DOCKERHUB_PASS')]) {
+                        sh "docker login -u ${DOCKER_HUB_USER} -p ${DOCKERHUB_PASS}"
+                        sh "docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}"
+                        sh "docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest"
+                    }
                 }
             }
         }
