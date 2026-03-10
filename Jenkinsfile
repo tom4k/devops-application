@@ -64,7 +64,7 @@ pipeline {
                 script {
                     echo "Deploying to EC2 instance at ${EC2_IP}..."
                     // Note: Requires 'SSH Agent Plugin' installed in Jenkins
-                    sshagent([SSH_CREDS_ID]) {
+                    sshagent(credentials: [SSH_CREDS_ID]) {
                         sh """
                             ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'docker pull ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest && docker stop ${DOCKER_IMAGE} || true && docker rm ${DOCKER_IMAGE} || true && docker run -d --name ${DOCKER_IMAGE} -p 80:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest'
                         """
