@@ -8,6 +8,11 @@ pipeline {
         DOCKER_CREDS_ID = 'dockerhub-creds' // ID of credentials in Jenkins
         DOCKER_HUB_USER = 'tomkurian' // Replace with your Docker Hub username
         TAG = "${env.BUILD_NUMBER}"
+        
+        // EC2 Deployment variables (update these)
+        EC2_IP = '44.200.31.106'
+        EC2_USER = 'ubuntu' // Common default for Ubuntu, might be ec2-user for Amazon Linux
+        SSH_CREDS_ID = 'ec2-ssh-key' // ID of the SSH private key credential in Jenkins
     }
 
     stages {
@@ -33,11 +38,10 @@ pipeline {
             steps {
                 script {
                     echo "Testing if the container runs..."
-                    // Start the container, wait a moment, and ensure it is up
-                    sh """
-                        docker run -d --name temp-test-${TAG} -p 8085:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}
-                       
-                    """
+                    // Use -P (random port) to avoid 'port already allocated' errors from previous runs
+                    sh "docker run -d --name temp-test-${TAG} -P ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}"
+                    sh "sleep 5"
+                    sh "docker stop temp-test-${TAG} || true"
                 }
             }
         }
@@ -54,8 +58,20 @@ pipeline {
                 }
             }
         }
-        
-        
+
+        stage('Deploy to EC2') {
+            steps {
+                script {
+                    echo "Deploying to EC2 instance at ${EC2_IP}..."
+                    // Note: Requires 'SSH Agent Plugin' installed in Jenkins
+                    sshagent([SSH_CREDS_ID]) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'docker pull ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest && docker stop ${DOCKER_IMAGE} || true && docker rm ${DOCKER_IMAGE} || true && docker run -d --name ${DOCKER_IMAGE} -p 80:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest'
+                        """
+                    }
+                }
+            }
+        }
     }
 
     post {
@@ -63,6 +79,8 @@ pipeline {
             echo "Pipeline finished."
             // Clean up workspace
             cleanWs()
+            // Clean up test container
+            sh "docker rm -f temp-test-${TAG} || true"
             // Clean up local images
             sh "docker rmi ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG} || true"
             sh "docker rmi ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest || true"
