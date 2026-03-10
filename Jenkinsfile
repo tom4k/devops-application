@@ -12,7 +12,7 @@ pipeline {
         // EC2 Deployment variables (update these)
         EC2_IP = '44.200.31.106'
         EC2_USER = 'ubuntu' // Common default for Ubuntu, might be ec2-user for Amazon Linux
-        SSH_CREDS_ID = 'ec2-ssh-key' // ID of the SSH private key credential in Jenkins
+        
     }
 
     stages {
@@ -63,15 +63,16 @@ pipeline {
             steps {
                 script {
                     echo "Deploying to EC2 instance at ${EC2_IP}..."
-                    // Note: Requires 'SSH Agent Plugin' installed in Jenkins
-                    sshagent(credentials: [SSH_CREDS_ID]) {
+                    withCredentials([file(credentialsId: 'ec2-pem-file', variable: 'PEM_FILE')]) {
                         sh """
-                            ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'docker pull ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest && docker stop ${DOCKER_IMAGE} || true && docker rm ${DOCKER_IMAGE} || true && docker run -d --name ${DOCKER_IMAGE} -p 80:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest'
+                            chmod 400 $PEM_FILE
+                            ssh -i $PEM_FILE -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'docker pull ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest && docker stop ${DOCKER_IMAGE} || true && docker rm ${DOCKER_IMAGE} || true && docker run -d --name ${DOCKER_IMAGE} -p 80:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest'
                         """
                     }
                 }
             }
         }
+
     }
 
     post {
