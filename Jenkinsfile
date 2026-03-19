@@ -10,7 +10,7 @@ pipeline {
         TAG = "${env.BUILD_NUMBER}"
         
         // EC2 Deployment variables (update these)
-        EC2_IP = 'ec2-100-31-125-73.compute-1.amazonaws.com'
+        EC2_IP = 'ec2-54-242-228-94.compute-1.amazonaws.com'
         EC2_USER = 'ubuntu' // Common default for Ubuntu, might be ec2-user for Amazon Linux
         
     }
