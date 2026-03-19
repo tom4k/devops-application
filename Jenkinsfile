@@ -10,7 +10,7 @@ pipeline {
         TAG = "${env.BUILD_NUMBER}"
         
         // EC2 Deployment variables (update these)
-        EC2_IP = 'ec2-54-242-228-94.compute-1.amazonaws.com'
+        EC2_IP = 'ec2-3-80-73-177.compute-1.amazonaws.com'
         EC2_USER = 'ubuntu' // Common default for Ubuntu, might be ec2-user for Amazon Linux
         
     }
@@ -29,8 +29,8 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker Image: ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}..."
-                    // Build explicitly for AMD64 (the architecture of standard EC2 instances)
-                    sh "docker build --platform linux/amd64 -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG} -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest ."
+                    // Build native format (ARM64) for identical Host and EC2 (Graviton) architecture
+                    sh "docker build -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG} -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest ."
                 }
             }
         }
