@@ -29,7 +29,8 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker Image: ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG}..."
-                    sh "docker build -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG} -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest ."
+                    // Build explicitly for AMD64 (the architecture of standard EC2 instances)
+                    sh "docker build --platform linux/amd64 -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${TAG} -t ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest ."
                 }
             }
         }
@@ -66,7 +67,7 @@ pipeline {
                     withCredentials([file(credentialsId: 'ec2-pem-file', variable: 'PEM_FILE')]) {
                         sh """
                             chmod 400 $PEM_FILE
-                            ssh -i $PEM_FILE -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'docker pull ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest && docker stop ${DOCKER_IMAGE} || true && docker rm ${DOCKER_IMAGE} || true && docker run --platform linux/arm64 -d --name ${DOCKER_IMAGE} -p 80:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest'
+                            ssh -i $PEM_FILE -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'docker pull ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest && docker stop ${DOCKER_IMAGE} || true && docker rm ${DOCKER_IMAGE} || true && docker run -d --name ${DOCKER_IMAGE} -p 80:80 ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest'
                         """
                     }
                 }
